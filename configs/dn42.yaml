@@ -1,0 +1,133 @@
+# dn42-dns 配置文件
+# 面向 dn42 网络的轻量级 DNS 分流服务器
+
+# 监听地址
+listen:
+  - addr: ":53"
+    protocol: udp
+  - addr: ":53"
+    protocol: tcp
+
+# 上游 DNS 服务器
+upstreams:
+  # 默认组：公网 DNS
+  default:
+    - addr: "223.5.5.5:53"
+      name: "阿里DNS"
+      protocol: udp
+    - addr: "119.29.29.29:53"
+      name: "腾讯DNS"
+      protocol: udp
+
+  # dn42 组：dn42 内部权威 DNS
+  groups:
+    dn42:
+      - addr: "172.20.0.53:53"
+        name: "a.root-servers.dn42"
+        protocol: udp
+      - addr: "172.22.122.158:53"
+        name: "b.root-servers.dn42"
+        protocol: udp
+
+# 分流规则
+routing:
+  # 域名后缀匹配（最长匹配优先）
+  domain_suffix:
+    dn42:
+      # dn42 主域名
+      - ".dn42"
+      # 其他 dn42 相关域名
+      - ".fdn"
+      - ".NeoNetwork"
+      - ".hack"
+      # IPv4 rDNS: 172.20.0.0/14 (172.20.0.0 - 172.23.255.255)
+      - "20.172.in-addr.arpa"
+      - "21.172.in-addr.arpa"
+      - "22.172.in-addr.arpa"
+      - "23.172.in-addr.arpa"
+      # 172.31.0.0/16 (部分 dn42 分配)
+      - "31.172.in-addr.arpa"
+      # IPv6 rDNS: fd00::/8 (dn42 ULA 段)
+      - "d.f.ip6.arpa"
+      - "e.f.ip6.arpa"
+      - "f.f.ip6.arpa"
+
+  # 默认上游组
+  default_group: default
+
+# DNS 缓存
+cache:
+  enabled: true
+  max_size: 20000   # 最大缓存条目数
+  min_ttl: 60       # 最小 TTL（秒），降低 dn42 查询量
+  max_ttl: 86400    # 最大 TTL（秒）
+  neg_ttl: 600      # 否定缓存 TTL（秒），避免反复查询不存在的域名
+
+# 反向 DNS (rDNS)
+rdns:
+  enabled: true
+  # 允许反向解析的网段（只响应这些网段的 PTR 查询）
+  allowed_networks:
+    - "172.20.0.0/14"   # dn42 主地址段
+    - "10.0.0.0/8"      # 私有地址
+    - "172.16.0.0/12"   # 私有地址
+    - "192.168.0.0/16"  # 私有地址
+    - "fd00::/8"        # ULA IPv6 (含 dn42)
+    - "127.0.0.0/8"     # 本地回环
+    - "::1/128"         # IPv6 回环
+
+  # 本地 rDNS 记录（IP -> 域名映射）
+  local_records:
+    # 在此添加你的 dn42 节点信息
+    # "172.22.xxx.xxx": "your-node.dn42"
+    # "172.22.xxx.1": "your-gw.dn42"
+    # "fdxx:xxxx:...": "your-node.dn42"
+    "127.0.0.1": "localhost"
+    "::1": "localhost"
+
+# 邮局 DNS（邮件相关记录）
+mail:
+  enabled: true
+  ttl: 3600         # 邮件记录默认 TTL（秒）
+
+  # MX 记录（邮件交换）
+  mx:
+    - domain: "example.dn42"
+      server: "mail.example.dn42"
+      priority: 10
+
+  # 邮件服务器 A 记录
+  a:
+    "mail.example.dn42": "172.22.100.1"
+
+  # SPF 记录（发件人策略框架）
+  spf:
+    "example.dn42": "v=spf1 mx ~all"
+
+  # DKIM 记录（域名密钥识别邮件）
+  # 格式: "selector._domainkey.example.dn42": "v=DKIM1; k=rsa; p=..."
+  dkim:
+    "default._domainkey.example.dn42": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA..."
+
+  # DMARC 记录（基于域名的邮件认证报告）
+  dmarc:
+    "_dmarc.example.dn42": "v=DMARC1; p=none; rua=mailto:dmarc@example.dn42"
+
+# 日志
+log:
+  level: info       # debug / info / warn / error
+  query_log: true   # 输出查询日志
+
+# HTTP 管理 API
+api:
+  enabled: true
+  addr: ":8080"     # 监听地址
+
+# 高可用主从模式
+ha:
+  mode: standalone  # standalone / master / slave
+  # master: "10.0.0.1:8080"   # 主节点地址（从节点配置）
+  # slaves:                    # 从节点列表（主节点配置）
+  #   - "10.0.0.2:8080"
+  #   - "10.0.0.3:8080"
+  sync_interval: 30  # 同步/健康检查间隔（秒）
