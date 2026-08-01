@@ -1,0 +1,148 @@
+# dn42-dns 配置文件
+# 专为 dn42 网络优化的配置
+
+# 监听配置
+listen:
+  - addr: ":53"
+    protocol: udp
+  - addr: ":53"
+    protocol: tcp
+
+# 上游DNS服务器配置
+upstreams:
+  # 默认上游（公网）
+  default:
+    - addr: "223.5.5.5:53"
+      name: "阿里DNS"
+    - addr: "119.29.29.29:53"
+      name: "腾讯DNS"
+    - addr: "114.114.114.114:53"
+      name: "114DNS"
+
+  # 分流上游组
+  groups:
+    # dn42 网络上游
+    dn42:
+      - addr: "172.20.0.53:53"
+        name: "a.root-servers.dn42 (Anycast)"
+      - addr: "172.20.1.53:53"
+        name: "b.root-servers.dn42 (EU)"
+      - addr: "172.20.2.53:53"
+        name: "c.root-servers.dn42 (Asia)"
+      - addr: "172.20.3.53:53"
+        name: "d.root-servers.dn42 (NA)"
+
+# 分流规则配置
+routing:
+  # 按域名后缀匹配分流
+  domain_suffix:
+    # dn42 相关顶级域
+    dn42:
+      - ".dn42"
+      - ".fdn"
+      - ".NeoNetwork"
+      - ".hack"
+      - ".hub.dn42"
+      - ".neo"
+      - ".bit"
+      - ".fur"
+      - ".ku"
+      - ".te"
+      - ".ti"
+      - ".uu"
+      # dn42 IPv4 反向解析 (172.20.0.0/14 = 172.20.0.0 - 172.23.255.255)
+      - "20.172.in-addr.arpa"
+      - "21.172.in-addr.arpa"
+      - "22.172.in-addr.arpa"
+      - "23.172.in-addr.arpa"
+      # dn42 其他私有地址段反向解析
+      - "16.172.in-addr.arpa"
+      - "17.172.in-addr.arpa"
+      - "18.172.in-addr.arpa"
+      - "19.172.in-addr.arpa"
+      - "31.172.in-addr.arpa"
+      - "10.in-addr.arpa"
+      # dn42 IPv6 反向解析 (fd00::/8 ULA)
+      - "d.f.ip6.arpa"
+
+  # 按域名精确匹配分流
+  domain_exact: {}
+
+  # 默认策略
+  default_group: default
+
+# 广告拦截配置
+adblock:
+  enabled: true
+  # 拦截响应类型: nxdomain / null / nodata
+  block_mode: nxdomain
+  # 拦截响应IP（null模式使用）
+  block_ipv4: "0.0.0.0"
+  block_ipv6: "::"
+
+  # 黑名单规则文件
+  blacklist_files:
+    - "rules/blacklist.txt"
+    # 可取消注释以订阅更多规则
+    # - "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+    # - "https://big.oisd.nl/basic"
+
+  # 白名单规则文件
+  whitelist_files:
+    - "rules/whitelist.txt"
+
+  # 自定义黑名单
+  custom_blacklist: []
+
+  # 自定义白名单
+  custom_whitelist: []
+
+# 缓存配置
+cache:
+  enabled: true
+  # 最大缓存条目数
+  max_size: 50000
+  # 最小TTL（秒），覆盖过低的TTL
+  min_ttl: 30
+  # 最大TTL（秒），覆盖过高的TTL
+  max_ttl: 86400
+  # 否定缓存TTL（NXDOMAIN缓存时间）
+  neg_ttl: 60
+  # 惰性缓存（过期后仍可临时返回）
+  lazy_cache: true
+  # 惰性缓存最大时长（秒）
+  lazy_cache_ttl: 7200
+  # 预取（高频域名自动刷新）
+  prefetch: true
+  # 预取阈值（命中次数）
+  prefetch_threshold: 5
+
+# rDNS（反向DNS）配置
+rdns:
+  enabled: true
+  # 允许的反向解析网段
+  allowed_networks:
+    - "172.20.0.0/14"   # dn42 主地址段
+    - "10.0.0.0/8"      # 私有地址
+    - "172.16.0.0/12"   # 私有地址
+    - "192.168.0.0/16"  # 私有地址
+    - "fd00::/8"        # ULA IPv6
+    - "127.0.0.0/8"     # 本地回环
+    - "::1/128"         # IPv6 回环
+  # 本地rDNS记录（IP -> 域名映射）
+  local_records:
+    # 在此添加你的 dn42 节点信息
+    # "172.22.xxx.xxx": "your-node.dn42"
+    # "172.22.xxx.1": "your-gw.dn42"
+    "127.0.0.1": "localhost"
+
+# 日志配置
+log:
+  level: info  # debug / info / warn / error
+  # 查询日志
+  query_log:
+    enabled: true
+    # 只记录被拦截的查询
+    only_blocked: false
+  # 统计日志输出间隔（秒），0表示不输出
+  stats_interval: 300

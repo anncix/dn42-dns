@@ -1,0 +1,152 @@
+# SmartDNS 配置文件
+# DNS分流 + 去广告 + 自定义DNS
+
+# 监听配置
+listen:
+  - addr: ":53"
+    protocol: udp
+  - addr: ":53"
+    protocol: tcp
+  # 可选: DoT/DoH 加密DNS服务端
+  # - addr: ":853"
+  #   protocol: dot
+  #   cert_file: "/path/to/cert.pem"
+  #   key_file: "/path/to/key.pem"
+
+# 上游DNS服务器配置
+upstreams:
+  # 默认上游（用于未匹配分流规则的域名）
+  default:
+    - addr: "223.5.5.5:53"
+      name: "阿里DNS"
+    - addr: "119.29.29.29:53"
+      name: "腾讯DNS"
+    # 加密DNS示例
+    # - addr: "https://dns.alidns.com/dns-query"
+    #   name: "阿里DoH"
+    #   protocol: doh
+    # - addr: "dot.pub:853"
+    #   name: "腾讯DoT"
+    #   protocol: dot
+
+  # 分流上游组
+  groups:
+    # 国内域名走国内DNS
+    domestic:
+      - addr: "223.5.5.5:53"
+        name: "阿里DNS"
+      - addr: "114.114.114.114:53"
+        name: "114DNS"
+
+    # 国外域名走加密DNS
+    foreign:
+      - addr: "https://cloudflare-dns.com/dns-query"
+        name: "Cloudflare DoH"
+        protocol: doh
+      - addr: "https://dns.google/dns-query"
+        name: "Google DoH"
+        protocol: doh
+
+# 分流规则配置
+routing:
+  # 按域名后缀匹配分流
+  domain_suffix:
+    domestic:
+      - ".cn"
+      - ".baidu.com"
+      - ".aliyun.com"
+      - ".taobao.com"
+      - ".tmall.com"
+      - ".jd.com"
+      - ".qq.com"
+      - ".weixin.qq.com"
+      - ".bilibili.com"
+      - ".zhihu.com"
+      - ".weibo.com"
+      - ".douyin.com"
+      - ".toutiao.com"
+    foreign:
+      - ".google.com"
+      - ".youtube.com"
+      - ".facebook.com"
+      - ".twitter.com"
+      - ".github.com"
+      - ".reddit.com"
+      - ".wikipedia.org"
+
+  # 按域名精确匹配分流
+  domain_exact: {}
+
+  # 默认策略: default / domestic / foreign
+  default_group: default
+
+# 广告拦截配置
+adblock:
+  enabled: true
+  # 拦截响应类型: nxdomain / null / nodata
+  block_mode: nxdomain
+  # 拦截响应IP（null模式使用）
+  block_ipv4: "0.0.0.0"
+  block_ipv6: "::"
+
+  # 黑名单规则文件
+  blacklist_files:
+    - "rules/blacklist.txt"
+    # 可添加更多规则文件
+    # - "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+
+  # 白名单规则文件
+  whitelist_files:
+    - "rules/whitelist.txt"
+
+  # 自定义黑名单（域名列表，每行一个）
+  custom_blacklist: []
+
+  # 自定义白名单
+  custom_whitelist: []
+
+# 缓存配置
+cache:
+  enabled: true
+  # 最大缓存条目数
+  max_size: 10000
+  # 最小TTL（秒），覆盖过低的TTL
+  min_ttl: 10
+  # 最大TTL（秒），覆盖过高的TTL
+  max_ttl: 86400
+  # 否定缓存TTL（NXDOMAIN缓存时间）
+  neg_ttl: 300
+  # 惰性缓存（过期后仍可临时返回）
+  lazy_cache: true
+  # 惰性缓存最大时长（秒）
+  lazy_cache_ttl: 3600
+  # 预取（高频域名自动刷新）
+  prefetch: true
+  # 预取阈值（命中次数）
+  prefetch_threshold: 5
+
+# rDNS（反向DNS）配置
+rdns:
+  enabled: true
+  # 允许的反向解析网段
+  allowed_networks:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "127.0.0.0/8"
+  # 本地rDNS记录（IP -> 域名映射）
+  local_records:
+    "192.168.1.1": "router.local"
+    "192.168.1.100": "server.local"
+    "127.0.0.1": "localhost"
+
+# 日志配置
+log:
+  level: info  # debug / info / warn / error
+  # 查询日志
+  query_log:
+    enabled: true
+    # 只记录被拦截的查询
+    only_blocked: false
+  # 统计日志输出间隔（秒），0表示不输出
+  stats_interval: 60

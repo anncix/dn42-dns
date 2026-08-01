@@ -1,0 +1,34 @@
+# 白名单 - 确保这些域名不会被误拦截
+# 格式同黑名单
+
+# 常用服务
+accounts.google.com
+googleapis.com
+fcm.googleapis.com
+mtalk.google.com
+clientservices.googleapis.com
+
+# 支付服务
+paypal.com
+alipay.com
+tenpay.com
+unionpay.com
+
+# 验证码服务
+recaptcha.net
+google.com
+hcaptcha.com
+
+# 常用CDN
+ajax.googleapis.com
+fonts.googleapis.com
+fonts.gstatic.com
+cdnjs.cloudflare.com
+jsdelivr.net
+unpkg.com
+
+# 系统更新
+update.microsoft.com
+windowsupdate.com
+appldnld.apple.com
+mesu.apple.com

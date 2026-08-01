@@ -1,0 +1,84 @@
+# 广告/恶意域名黑名单
+# 格式：每行一个域名，支持以下格式：
+# 1. 纯域名: example.com (匹配该域名及其所有子域名)
+# 2. hosts格式: 0.0.0.0 example.com
+# 3. AdGuard格式: ||example.com^
+
+# 广告网络
+doubleclick.net
+googlesyndication.com
+googleadservices.com
+adnxs.com
+advertising.com
+pubmatic.com
+rubiconproject.com
+openx.net
+criteo.com
+taboola.com
+outbrain.com
+yieldmo.com
+indexww.com
+casalemedia.com
+exponential.com
+kontera.com
+tribalfusion.com
+burstnet.com
+valueclickmedia.com
+2mdn.net
+admeld.com
+admob.com
+adtechus.com
+atdmt.com
+avazu.net
+bidgeer.com
+clmbtech.com
+coremetrics.com
+dotomi.com
+ebuzzing.com
+elaso.com
+eyeota.com
+flashtalking.com
+forter.com
+giraffcdn.com
+google-analytics.com
+googletagmanager.com
+hotjar.com
+kissmetrics.com
+krxd.net
+luckyorange.com
+matomo.org
+mouseflow.com
+newrelic.com
+omniture.com
+optimizely.com
+pardot.com
+perfectaudience.com
+pingdom.net
+pixel.quantserve.com
+quantserve.com
+scorecardresearch.com
+segment.io
+sentry.io
+smartlook.com
+statcounter.com
+tapad.com
+tealium.com
+trackjs.com
+usabilla.com
+visualwebsiteoptimizer.com
+webtrends.com
+woopra.com
+yandex-metrica.ru
+zoomanalytics.com
+
+# 国内广告
+tanx.com
+sinaimg.cn
+adimg.com
+allyes.com
+iqiyi.com
+miaozhen.com
+admaster.com.cn
+emarbox.com
+weibo.com
+# 更多可自行添加

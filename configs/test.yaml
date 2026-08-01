@@ -1,0 +1,79 @@
+# SmartDNS 测试配置文件
+# 使用非特权端口进行测试
+
+listen:
+  - addr: ":5353"
+    protocol: udp
+  - addr: ":5353"
+    protocol: tcp
+
+upstreams:
+  default:
+    - addr: "223.5.5.5:53"
+      name: "阿里DNS"
+    - addr: "119.29.29.29:53"
+      name: "腾讯DNS"
+
+  groups:
+    domestic:
+      - addr: "223.5.5.5:53"
+        name: "阿里DNS"
+      - addr: "114.114.114.114:53"
+        name: "114DNS"
+    foreign:
+      - addr: "8.8.8.8:53"
+        name: "Google DNS"
+
+routing:
+  domain_suffix:
+    domestic:
+      - ".cn"
+      - ".baidu.com"
+      - ".aliyun.com"
+      - ".qq.com"
+    foreign:
+      - ".google.com"
+      - ".github.com"
+  default_group: default
+
+adblock:
+  enabled: true
+  block_mode: nxdomain
+  block_ipv4: "0.0.0.0"
+  block_ipv6: "::"
+  blacklist_files:
+    - "rules/blacklist.txt"
+  whitelist_files:
+    - "rules/whitelist.txt"
+  custom_blacklist: []
+  custom_whitelist: []
+
+cache:
+  enabled: true
+  max_size: 1000
+  min_ttl: 10
+  max_ttl: 86400
+  neg_ttl: 300
+  lazy_cache: true
+  lazy_cache_ttl: 3600
+  prefetch: true
+  prefetch_threshold: 5
+
+rdns:
+  enabled: true
+  allowed_networks:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "127.0.0.0/8"
+  local_records:
+    "192.168.1.1": "router.local"
+    "192.168.1.100": "server.local"
+    "127.0.0.1": "localhost"
+
+log:
+  level: info
+  query_log:
+    enabled: true
+    only_blocked: false
+  stats_interval: 0
